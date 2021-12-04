@@ -1,53 +1,44 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/sethlittleford/aoc-2021/utils"
 )
 
 func main() {
-	absPath, err := filepath.Abs("day3/input.txt")
-	check(err)
+	input := utils.ReadStrings("day3/input.txt")
 
-	// examplePath, err := filepath.Abs("day3/example.txt")
-	// check(err)
+	// exampleInput := utils.ReadStrings("day3/input.txt")
 
-	fmt.Printf("Part 1 Answer: %d\n", part1(absPath))
-	fmt.Printf("Part 2 Answer: %d\n", part2(absPath))
+	fmt.Printf("Part 1 Answer: %d\n", part1(input))
+	fmt.Printf("Part 2 Answer: %d\n", part2(input))
 }
 
-func part1(filePath string) int64 {
-
-	gamma := calculateGammaRate(filePath)
+func part1(input []string) int64 {
+	gamma := calculateGammaRate(input)
 	epsilon := calculateEpsilonRate(gamma)
 
 	// convert gamma and epsilon rates to decimal numbers
 	gammaInt, err := strconv.ParseInt(strings.Join(gamma, ""), 2, 64)
-	check(err)
+	utils.CheckErr(err)
 	epsilonInt, err := strconv.ParseInt(strings.Join(epsilon, ""), 2, 64)
-	check(err)
+	utils.CheckErr(err)
 
 	return gammaInt * epsilonInt
 }
 
-func calculateGammaRate(filePath string) []string {
-	file, err := os.Open(filePath)
-	check(err)
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+func calculateGammaRate(input []string) []string {
 	countOf1s := make([]int, 12)
-	for scanner.Scan() {
-		line := strings.Split(scanner.Text(), "")
+	for _, v := range input {
+		line := strings.Split(v, "")
 		for i, b := range line {
 			if b == "1" {
 				countOf1s[i] += 1
 			}
-		}	
+		}
 	}
 
 	gammaRate := make([]string, 12)
@@ -59,7 +50,7 @@ func calculateGammaRate(filePath string) []string {
 			// the 0 bit is the most common
 			gammaRate[i] = "0"
 		}
-	}	
+	}
 
 	return gammaRate
 }
@@ -76,31 +67,26 @@ func calculateEpsilonRate(gammaRate []string) []string {
 	return epsilonRate
 }
 
-func part2(filePath string) int64 {
-	file, err := os.Open(filePath)
-	check(err)
-	defer file.Close()
-
+func part2(input []string) int64 {
 	inputMatrix := make([][]string, 0)
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.Split(scanner.Text(), "")
+	for _, v := range input {
+		line := strings.Split(v, "")
 		inputMatrix = append(inputMatrix, line)
 	}
 
-	ox, _ := oxygenGenRate(inputMatrix, 0)
-	c2, _ := co2ScrubberRate(inputMatrix, 0)
+	ox, _ := lifeSupport(inputMatrix, 0, "oxygen")
+	c2, _ := lifeSupport(inputMatrix, 0, "co2")
 
 	// convert to decimal
 	oxygen, err := strconv.ParseInt(strings.Join(ox[0], ""), 2, 64)
-	check(err)
+	utils.CheckErr(err)
 	co2, err := strconv.ParseInt(strings.Join(c2[0], ""), 2, 64)
-	check(err)
+	utils.CheckErr(err)
 
 	return oxygen * co2
 }
 
-func oxygenGenRate(input [][]string, index int) ([][]string, int) {
+func lifeSupport(input [][]string, index int, param string) ([][]string, int) {
 	// base case
 	if len(input) == 1 {
 		return input, index
@@ -112,47 +98,31 @@ func oxygenGenRate(input [][]string, index int) ([][]string, int) {
 	var countOf0s int
 	for _, line := range input {
 		if line[index] == "1" {
-			countOf1s ++
+			countOf1s++
 		} else {
-			countOf0s ++
+			countOf0s++
 		}
 	}
-	if countOf1s >= countOf0s {
-		// keep lines with the most common bit, 1
-		filtered = filterLines(input, "1", index)
-	} else {
-		// keep lines with the most common bit, 0
-		filtered = filterLines(input, "0", index)
-	}
-
-	return oxygenGenRate(filtered, index + 1)
-}
-
-func co2ScrubberRate(input [][]string, index int) ([][]string, int) {
-	// base case
-	if len(input) == 1 {
-		return input, index
-	}
-	var filtered [][]string
-	// find least common bit
-	var countOf1s int
-	var countOf0s int
-	for _, line := range input {
-		if line[index] == "1" {
-			countOf1s ++
+	switch param {
+	case "oxygen":
+		if countOf1s >= countOf0s {
+			// keep lines with the most common bit, 1
+			filtered = filterLines(input, "1", index)
 		} else {
-			countOf0s ++
+			// keep lines with the most common bit, 0
+			filtered = filterLines(input, "0", index)
+		}
+	case "co2":
+		if countOf0s <= countOf1s {
+			// keep lines with the least common bit, 0
+			filtered = filterLines(input, "0", index)
+		} else {
+			// keep lines with the least common bit, 1
+			filtered = filterLines(input, "1", index)
 		}
 	}
-	if countOf0s <= countOf1s {
-		// keep lines with the least common bit, 0
-		filtered = filterLines(input, "0", index)
-	} else {
-		// keep lines with the least common bit, 1
-		filtered = filterLines(input, "1", index)
-	}
 
-	return co2ScrubberRate(filtered, index + 1)
+	return lifeSupport(filtered, index+1, param)
 }
 
 func filterLines(input [][]string, common string, index int) [][]string {
@@ -163,10 +133,4 @@ func filterLines(input [][]string, common string, index int) [][]string {
 		}
 	}
 	return filtered
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
