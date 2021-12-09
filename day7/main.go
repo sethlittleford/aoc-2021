@@ -16,8 +16,6 @@ func main() {
 
 	fmt.Printf("Part 1 Answer: %d\n", part1(positions))
 	fmt.Printf("Part 2 Answer: %d\n", part2(positions))
-
-	fmt.Println(8 / 2)
 }
 
 func part1(positions []float64) int {
