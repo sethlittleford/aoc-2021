@@ -94,7 +94,6 @@ func part2(input []string) int {
 
 	// find the incomplete lines
 	lineScores := make([]int, 0)
-	incomplete := make([]string, 0) // needed?
 	for _, line := range input {
 		s := NewStack()
 		var isCorrupted bool
@@ -116,18 +115,12 @@ func part2(input []string) int {
 		}
 		if !isCorrupted {
 			// this line is incomplete
-			incomplete = append(incomplete, line)
-			fmt.Println(line)
-			fmt.Println(s.chars)
-			fmt.Println(len(s.chars))
-
-			// build up completion string by popping stack and adding complimentary closer
+			// no need for completion string, just calculate line score by popping stack and
+			// adding score for complimentary closers
 			lineScore := 0
 			for i := len(s.chars) - 1; i >= 0; i-- {
-				fmt.Println(s.chars[i])
 				lineScore *= 5
 				lineScore += oPairs[s.chars[i]].points
-				// fmt.Println(open, lineScore)
 			}
 			lineScores = append(lineScores, lineScore)
 		}
@@ -135,8 +128,6 @@ func part2(input []string) int {
 
 	// sort the line scores, then take the middle score
 	sort.Ints(lineScores)
-	fmt.Println(lineScores)
-	fmt.Println(5 / 2)
 
 	return lineScores[len(lineScores) / 2]
 }
